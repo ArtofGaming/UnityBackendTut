@@ -14,6 +14,10 @@ public class Web : MonoBehaviour
         //StartCoroutine(RegisterUser("sparkle", "bestg1rl"));
     }
 
+    public void ShowUserItems()
+    {
+        StartCoroutine(GetItemIDs(Main.Instance.UserInfo.UserID));
+    }
     IEnumerator GetDate()
     {
         using(UnityWebRequest www = UnityWebRequest.Get("http://localhost/UnityBackendTutorial/GetDate.php"))
@@ -56,9 +60,45 @@ public class Web : MonoBehaviour
         form.AddField("loginUser", username);
         form.AddField("loginPass", password);
 
-        using (UnityWebRequest www = UnityWebRequest.Get("http://localhost/UnityBackendTutorial/Login.php"))
+        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/unitybackendtutorial/Login.php", form))
         {
             
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.Log(www.error);
+            }
+            else
+            {
+                Debug.Log(www.downloadHandler.text);
+                Main.Instance.UserInfo.SetCredentials(username,password);
+                Main.Instance.UserInfo.SetID(www.downloadHandler.text);
+
+                if (www.downloadHandler.text.Contains("Wrong Credentials") || www.downloadHandler.text.Contains("Username does not exist"))
+                {
+                    Debug.Log("Try Again");
+                }
+                else
+                {
+                    Main.Instance.UserProfile.SetActive(true);
+                    //Main.Instance.Login.gameObject.SetActive(false)
+                }
+
+
+            }
+        }
+    }
+
+    IEnumerator RegisterUser(string username, string password)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("loginUser", username);
+        form.AddField("loginPass", password);
+
+        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/UnityBackendTutorial/RegisterUser.php", form))
+        {
+
             yield return www.SendWebRequest();
 
             if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
@@ -72,13 +112,12 @@ public class Web : MonoBehaviour
         }
     }
 
-    IEnumerator RegisterUser(string username, string password)
+    public IEnumerator GetItemIDs(string userID, System.Action<string> callback)
     {
         WWWForm form = new WWWForm();
-        form.AddField("loginUser", username);
-        form.AddField("loginPass", password);
+        form.AddField("userID", userID);
 
-        using (UnityWebRequest www = UnityWebRequest.Get("http://localhost/UnityBackendTutorial/RegisterUser.php"))
+        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/UnityBackendTutorial/GetItemIDs.php", form))
         {
 
             yield return www.SendWebRequest();
@@ -90,6 +129,33 @@ public class Web : MonoBehaviour
             else
             {
                 Debug.Log(www.downloadHandler.text);
+                string jsonArray = www.downloadHandler.text;
+
+                callback(jsonArray);
+            }
+        }
+    }
+
+    public IEnumerator GetItem(string itemID, System.Action<string> callback)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("itemID", itemID);
+
+        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/UnityBackendTutorial/GetItem.php", form))
+        {
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.Log(www.error);
+            }
+            else
+            {
+                Debug.Log(www.downloadHandler.text);
+                string jsonArray = www.downloadHandler.text;
+
+                callback(jsonArray);
             }
         }
     }
