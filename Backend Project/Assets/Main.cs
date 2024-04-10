@@ -12,7 +12,7 @@ public class Main : MonoBehaviour
     public GameObject UserProfile;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         Instance = this;
         Web = GetComponent<Web>();

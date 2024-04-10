@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 public class Web : MonoBehaviour
 {
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         //StartCoroutine(GetDate());
         //StartCoroutine(GetUsers());
@@ -14,10 +14,11 @@ public class Web : MonoBehaviour
         //StartCoroutine(RegisterUser("sparkle", "bestg1rl"));
     }
 
-    public void ShowUserItems()
+    /*public void ShowUserItems()
     {
         StartCoroutine(GetItemIDs(Main.Instance.UserInfo.UserID));
-    }
+    }*/
+
     IEnumerator GetDate()
     {
         using(UnityWebRequest www = UnityWebRequest.Get("http://localhost/UnityBackendTutorial/GetDate.php"))
@@ -128,7 +129,7 @@ public class Web : MonoBehaviour
             }
             else
             {
-                Debug.Log(www.downloadHandler.text);
+                //Debug.Log(www.downloadHandler.text);
                 string jsonArray = www.downloadHandler.text;
 
                 callback(jsonArray);
@@ -156,6 +157,28 @@ public class Web : MonoBehaviour
                 string jsonArray = www.downloadHandler.text;
 
                 callback(jsonArray);
+            }
+        }
+    }
+
+    public IEnumerator SellItem(string itemID, string userID)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("itemID", itemID);
+        form.AddField("userID", userID);
+
+        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/UnityBackendTutorial/SellItem.php", form))
+        {
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.Log(www.error);
+            }
+            else
+            {
+                Debug.Log(www.downloadHandler.text);
             }
         }
     }

@@ -8,6 +8,9 @@ using UnityEngine.UI;
 
 public class Items : MonoBehaviour
 {
+    public string ID;       
+    public string ItemID;
+
     Action<string> _createItemsCallback;
     // Start is called before the first frame update
     void Start()
@@ -28,8 +31,9 @@ public class Items : MonoBehaviour
     public void CreateItems()
     {
         string userId = Main.Instance.UserInfo.UserID;
+        Debug.Log(userId);
         StartCoroutine(Main.Instance.Web.GetItemIDs(userId, _createItemsCallback));
-    }
+    }   
 
     IEnumerator CreateItemsRoutine(string JsonArrayString)
     {
@@ -39,6 +43,7 @@ public class Items : MonoBehaviour
         {
             bool isDone = false;
             string itemid = jsonArray[i].AsObject["itemID"];
+            string id = jsonArray[i].AsObject["ID"];
             JSONObject itemInfoJson = new JSONObject();
 
             Action<string> getItemInfoCallback = (itemInfo) =>
@@ -50,16 +55,27 @@ public class Items : MonoBehaviour
 
             StartCoroutine(Main.Instance.Web.GetItem(itemid, getItemInfoCallback));
 
-            yield return new WaitUntil(() => isDone = true);
+            yield return new WaitUntil(() => isDone == true);
 
-            GameObject item = Instantiate(Resources.Load("Prefabs/Item") as GameObject);
-            item.transform.SetParent(this.transform);
-            item.transform.localScale = Vector3.one;
-            item.transform.localPosition = Vector3.zero;
+            GameObject itemGo = Instantiate(Resources.Load("Prefabs/Item") as GameObject);
+            Items item = itemGo.AddComponent<Items>();
+            item.ID = id;
+            item.ItemID = itemid;
+            itemGo.transform.SetParent(this.transform);
+            itemGo.transform.localScale = Vector3.one;
+            itemGo.transform.localPosition = Vector3.zero;
 
-            item.transform.Find("Name").GetComponent<Text>().text = itemInfoJson["name"];
-            item.transform.Find("Price").GetComponent<Text>().text = itemInfoJson["price"];
-            item.transform.Find("Description").GetComponent<Text>().text = itemInfoJson["description"];
+            itemGo.transform.Find("Name").GetComponent<Text>().text = itemInfoJson["name"];
+            itemGo.transform.Find("Price").GetComponent<Text>().text = itemInfoJson["price"];
+            itemGo.transform.Find("Description").GetComponent<Text>().text = itemInfoJson["description"];
+
+            itemGo.transform.Find("SellButton").GetComponent<Button>().onClick.AddListener(() =>
+            {
+                string iId = itemid;
+                string uId = Main.Instance.UserInfo.UserID;
+                StartCoroutine(Main.Instance.Web.SellItem(iId,uId));
+            }
+                );
 
 
         }
